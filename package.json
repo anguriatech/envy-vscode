@@ -3,6 +3,16 @@
   "displayName": "envy",
   "description": "Local-first encrypted secrets management",
   "version": "0.0.1",
+  "publisher": "anguriatech",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anguriatech/envy-vscode"
+  },
+  "keywords": [
+    "secrets",
+    "envy",
+    "security"
+  ],
   "engines": {
     "vscode": "^1.110.0"
   },

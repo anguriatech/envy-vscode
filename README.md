@@ -1,71 +1,48 @@
-# envy-vscode README
+# Envy for VS Code
 
-This is the README for your extension "envy-vscode". After writing up a brief description, we recommend including the following sections.
-
-## Features
-
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
-
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+A VS Code extension that wraps the [envy](https://github.com/anguriatech/envy) CLI — a local-first encrypted secrets manager. All cryptographic operations are handled by the `envy` binary; this extension is a pure UI layer.
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+The `envy` CLI must be installed and available on your `PATH`. If it is not found on activation, the extension will show an error notification with a link to the installation guide.
 
-## Extension Settings
+See [https://github.com/anguriatech/envy#installation](https://github.com/anguriatech/envy#installation) for installation instructions.
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+## Commands
 
-For example:
+All commands are available from the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
 
-This extension contributes the following settings:
+| Command | Description |
+|---------|-------------|
+| **Envy: Init Vault** | Initialize an `envy` vault in the current workspace (`envy init`) |
+| **Envy: Set Secret** | Add or update a secret via a two-step input — key (visible) then value (obscured) |
+| **Envy: Show Diff** | Open the integrated terminal and run `envy diff` to see unsealed changes |
+| **Envy: Encrypt (Seal)** | Open the integrated terminal and run `envy encrypt` — passphrase prompt appears in the terminal |
+| **Envy: Decrypt** | Open the integrated terminal and run `envy decrypt` — passphrase prompt appears in the terminal |
+| **Envy: Refresh Status** | Manually refresh the status bar item |
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+## Status Bar
 
-## Known Issues
+A status bar item in the bottom-right corner shows the current vault state:
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+| Icon | Meaning |
+|------|---------|
+| `$(sync) Envy: In Sync` | Vault matches the sealed file |
+| `$(warning) Envy: Modified` | Unsealed changes are present |
+| `$(circle-slash) Envy: Never Sealed` | Vault has never been encrypted |
+| `$(circle-slash) Envy: Not Initialized` | No `envy.toml` found in the workspace |
+| `$(error) Envy: Error` | Unexpected CLI error |
+
+Click the status bar item to manually refresh it.
+
+## How It Works
+
+- `envy init`, `envy set`, and `envy status` run via `execFile` (no shell, no PTY needed).
+- `envy diff`, `envy encrypt`, and `envy decrypt` require an interactive passphrase prompt — they run inside the VS Code integrated terminal, which provides a real PTY.
+- The secret value entered via "Envy: Set Secret" is **never** written to the Output Channel or any log.
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
+### 0.0.1
 
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Initial release — MVP covering vault initialization, secret management, diff, encrypt, and decrypt.
