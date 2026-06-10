@@ -1,9 +1,11 @@
 # envy-vscode Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-06
+Auto-generated from all feature plans. Last updated: 2026-06-10
 
 ## Active Technologies
 - TypeScript 5.9 (strict mode, `module: Node16`, `target: ES2022`) — same as `001-vscode-extension-mvp` + `vscode` API (built-in) — `TreeDataProvider`, `TreeItem`, `EventEmitter`, `env.clipboard`, `commands.executeCommand`; Node.js `child_process` via existing `cli.ts` (002-tree-view)
+- TypeScript 5.9 (strict mode, `module: Node16`, `target: ES2022`) — same as `001-vscode-extension-mvp` and `002-tree-view` + `vscode` API (built-in) — `window.showInputBox({ password: true })`, `JSON.parse` (via the JSON module exposed by VS Code), `commands.executeCommand`, `env.clipboard`; Node.js `child_process` via existing `cli.ts` (extending to use `spawn` for stdin) (003-extension-polish)
+- N/A — all persistence stays inside the `envy` CLI's vault; the extension holds no in-memory secret beyond the lifetime of one handler invocation (003-extension-polish)
 
 - TypeScript 5.9 (strict mode, `module: Node16`, `target: ES2022`) + `vscode` API (built-in), Node.js `child_process` (built-in) — no additional runtime dependencies (001-vscode-extension-mvp)
 
@@ -38,6 +40,7 @@ npm test && npm run lint
 TypeScript 5.9 (strict mode, `module: Node16`, `target: ES2022`): Follow standard conventions
 
 ## Recent Changes
+- 003-extension-polish: Added TypeScript 5.9 (strict mode, `module: Node16`, `target: ES2022`) — same as `001-vscode-extension-mvp` and `002-tree-view` + `vscode` API (built-in) — `window.showInputBox({ password: true })`, `JSON.parse` (via the JSON module exposed by VS Code), `commands.executeCommand`, `env.clipboard`; Node.js `child_process` via existing `cli.ts` (extending to use `spawn` for stdin)
 - 002-tree-view: Added TypeScript 5.9 (strict mode, `module: Node16`, `target: ES2022`) — same as `001-vscode-extension-mvp` + `vscode` API (built-in) — `TreeDataProvider`, `TreeItem`, `EventEmitter`, `env.clipboard`, `commands.executeCommand`; Node.js `child_process` via existing `cli.ts`
 
 - 001-vscode-extension-mvp: Added TypeScript 5.9 (strict mode, `module: Node16`, `target: ES2022`) + `vscode` API (built-in), Node.js `child_process` (built-in) — no additional runtime dependencies

@@ -11,6 +11,40 @@ import { handler as decryptHandler } from './commands/decrypt';
 // Cached on activation; read by requireCli() before every command.
 let cliAvailable = false;
 
+// Concurrency guard for the three crypto commands (encrypt, decrypt, diff).
+// When a crypto command is in flight, a second invocation shows an
+// "operation in progress" toast and aborts (no queueing). set and init
+// are NOT serialized — they are short-lived and passphrase-free.
+let inFlight: Promise<void> | undefined;
+
+/**
+ * Returns true if a crypto command is allowed to start. When a previous
+ * crypto command is still in flight, shows a notification and returns false.
+ */
+function guardCrypto(): boolean {
+    if (inFlight !== undefined) {
+        void vscode.window.showInformationMessage('Envy: operation in progress');
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Tracks a crypto command's promise. Sets `inFlight` while the promise is
+ * pending and clears it in `.finally` so the next invocation can start.
+ * The returned promise is the original `p` — callers can `await` it normally.
+ */
+function trackCrypto<T>(p: Promise<T>): Promise<T> {
+    inFlight = p.then(
+        () => undefined,
+        () => undefined,
+    );
+    void p.finally(() => {
+        inFlight = undefined;
+    });
+    return p;
+}
+
 /**
  * Guard used at the top of every command handler.
  * Shows an error notification and returns false when the CLI is not installed.
@@ -80,23 +114,24 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('envy-vscode.showDiff', async () => {
             const cwd = getWorkspaceCwd();
             if (cwd === undefined || !requireCli()) { return; }
-            await showDiffHandler(outputChannel, cwd);
+            if (!guardCrypto()) { return; }
+            await trackCrypto(showDiffHandler(outputChannel, cwd));
         }),
         vscode.commands.registerCommand('envy-vscode.encrypt', async () => {
             if (!requireCli()) { return; }
+            if (!guardCrypto()) { return; }
             const cwd = getWorkspaceCwd();
-            await encryptHandler(() => cwd !== undefined
-                ? refreshStatusBar(statusBarItem, cwd)
-                : Promise.resolve()
-            );
+            if (cwd === undefined) { return; }
+            await trackCrypto(encryptHandler(() => refreshStatusBar(statusBarItem, cwd)));
+            await refreshTree();
         }),
         vscode.commands.registerCommand('envy-vscode.decrypt', async () => {
             if (!requireCli()) { return; }
+            if (!guardCrypto()) { return; }
             const cwd = getWorkspaceCwd();
-            await decryptHandler(() => cwd !== undefined
-                ? refreshStatusBar(statusBarItem, cwd)
-                : Promise.resolve()
-            );
+            if (cwd === undefined) { return; }
+            await trackCrypto(decryptHandler(() => refreshStatusBar(statusBarItem, cwd)));
+            await refreshTree();
         }),
         vscode.commands.registerCommand('envy-vscode.refreshStatus', async () => {
             const cwd = getWorkspaceCwd();

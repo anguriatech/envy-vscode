@@ -29,7 +29,7 @@ export async function handler(
         return; // user pressed Escape — abort cleanly
     }
 
-    const result = await execEnvy(['set', `${key}=${value}`], cwd);
+    const result = await execEnvy(['set', '--stdin', key], cwd, { stdin: value });
 
     if (result.exitCode !== 0) {
         // Append only the CLI error — never the key or value.
