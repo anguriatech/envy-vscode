@@ -17,7 +17,7 @@ suite('Extension Test Suite', () => {
 		assert.ok(true);
 	});
 
-	test('All five Envy commands are registered', async () => {
+	test('All Envy commands are registered', async () => {
 		await activateExtension();
 		const commands = await vscode.commands.getCommands(true);
 		const envyCommands = [
@@ -26,6 +26,10 @@ suite('Extension Test Suite', () => {
 			'envy-vscode.showDiff',
 			'envy-vscode.encrypt',
 			'envy-vscode.decrypt',
+			'envy-vscode.refreshStatus',
+			'envy-vscode.copyKeyName',
+			'envy-vscode.editSecret',
+			'envy-vscode.refreshTreeView',
 		];
 		for (const cmd of envyCommands) {
 			assert.ok(

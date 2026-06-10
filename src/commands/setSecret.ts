@@ -4,12 +4,14 @@ import { execEnvy } from '../cli';
 export async function handler(
     outputChannel: vscode.OutputChannel,
     cwd: string,
-    refresh: () => Promise<void>
+    refresh: () => Promise<void>,
+    prefillKey?: string
 ): Promise<void> {
     // Step 1: collect the secret key.
     const key = await vscode.window.showInputBox({
         prompt: 'Secret key (e.g. DATABASE_URL)',
         placeHolder: 'KEY_NAME',
+        value: prefillKey ?? '',
         ignoreFocusOut: true,
     });
     if (key === undefined) {

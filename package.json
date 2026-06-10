@@ -24,6 +24,36 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "envySecrets",
+          "name": "Envy Secrets"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "envySecrets",
+        "contents": "No secrets found in this environment.\n[Set a secret](command:envy-vscode.setSecret) to add one.",
+        "when": "envySecrets.state == 'empty'"
+      },
+      {
+        "view": "envySecrets",
+        "contents": "Vault not initialized.\n[Init Vault](command:envy-vscode.initVault) to get started.",
+        "when": "envySecrets.state == 'notInitialized'"
+      },
+      {
+        "view": "envySecrets",
+        "contents": "Envy CLI not found. Install it to use this extension.",
+        "when": "envySecrets.state == 'cliUnavailable'"
+      },
+      {
+        "view": "envySecrets",
+        "contents": "Unable to load secrets. Check the Envy Output Channel for details.",
+        "when": "envySecrets.state == 'error'"
+      }
+    ],
     "commands": [
       {
         "command": "envy-vscode.initVault",
@@ -48,8 +78,44 @@
       {
         "command": "envy-vscode.refreshStatus",
         "title": "Envy: Refresh Status"
+      },
+      {
+        "command": "envy-vscode.copyKeyName",
+        "title": "Envy: Copy Key Name",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "envy-vscode.editSecret",
+        "title": "Envy: Edit Secret",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "envy-vscode.refreshTreeView",
+        "title": "Envy: Refresh Tree",
+        "icon": "$(refresh)"
       }
-    ]
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "envy-vscode.refreshTreeView",
+          "when": "view == envySecrets",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "envy-vscode.copyKeyName",
+          "when": "view == envySecrets && viewItem == secretKey",
+          "group": "inline@1"
+        },
+        {
+          "command": "envy-vscode.editSecret",
+          "when": "view == envySecrets && viewItem == secretKey",
+          "group": "inline@2"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
