@@ -3,6 +3,7 @@
 Auto-generated from all feature plans. Last updated: 2026-04-06
 
 ## Active Technologies
+- TypeScript 5.9 (strict mode, `module: Node16`, `target: ES2022`) — same as `001-vscode-extension-mvp` + `vscode` API (built-in) — `TreeDataProvider`, `TreeItem`, `EventEmitter`, `env.clipboard`, `commands.executeCommand`; Node.js `child_process` via existing `cli.ts` (002-tree-view)
 
 - TypeScript 5.9 (strict mode, `module: Node16`, `target: ES2022`) + `vscode` API (built-in), Node.js `child_process` (built-in) — no additional runtime dependencies (001-vscode-extension-mvp)
 
@@ -35,8 +36,14 @@ npm test && npm run lint
 TypeScript 5.9 (strict mode, `module: Node16`, `target: ES2022`): Follow standard conventions
 
 ## Recent Changes
+- 002-tree-view: Added TypeScript 5.9 (strict mode, `module: Node16`, `target: ES2022`) — same as `001-vscode-extension-mvp` + `vscode` API (built-in) — `TreeDataProvider`, `TreeItem`, `EventEmitter`, `env.clipboard`, `commands.executeCommand`; Node.js `child_process` via existing `cli.ts`
 
 - 001-vscode-extension-mvp: Added TypeScript 5.9 (strict mode, `module: Node16`, `target: ES2022`) + `vscode` API (built-in), Node.js `child_process` (built-in) — no additional runtime dependencies
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
+
+<!-- SPECKIT START -->
+For additional context about technologies to be used, project structure,
+shell commands, and other important information, read the current plan
+<!-- SPECKIT END -->

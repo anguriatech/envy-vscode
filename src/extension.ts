@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { execEnvy, CliNotFoundError } from './cli';
 import { createStatusBar, refreshStatusBar } from './statusBar';
+import { EnvySecretsProvider } from './treeView';
 import { handler as initVaultHandler } from './commands/initVault';
 import { handler as setSecretHandler } from './commands/setSecret';
 import { handler as showDiffHandler } from './commands/showDiff';
@@ -44,6 +45,16 @@ export function activate(context: vscode.ExtensionContext): void {
 
     // Persistent status bar item — bottom right.
     const statusBarItem = createStatusBar(context);
+
+    // "Envy Secrets" tree view in the Explorer sidebar.
+    const treeProvider = new EnvySecretsProvider(
+        vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? ''
+    );
+    context.subscriptions.push(
+        vscode.window.registerTreeDataProvider('envySecrets', treeProvider)
+    );
+    // Set initial loading state so viewsWelcome doesn't flicker on startup.
+    void vscode.commands.executeCommand('setContext', 'envySecrets.state', 'loading');
 
     // Register all Command Palette commands unconditionally so they always
     // appear in the palette. Workspace and CLI checks happen inside each handler.
