@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { execEnvy, CliNotFoundError } from './cli';
 import { createStatusBar, refreshStatusBar } from './statusBar';
-import { EnvySecretsProvider } from './treeView';
+import { EnvySecretsProvider, SecretKeyItem } from './treeView';
 import { handler as initVaultHandler } from './commands/initVault';
 import { handler as setSecretHandler } from './commands/setSecret';
 import { handler as showDiffHandler } from './commands/showDiff';
@@ -56,6 +56,12 @@ export function activate(context: vscode.ExtensionContext): void {
     // Set initial loading state so viewsWelcome doesn't flicker on startup.
     void vscode.commands.executeCommand('setContext', 'envySecrets.state', 'loading');
 
+    // Refresh closures — kept in one place so all handlers refresh both the
+    // status bar and the tree view after successful operations.
+    const refreshTree = async (): Promise<void> => {
+        treeProvider.refresh();
+    };
+
     // Register all Command Palette commands unconditionally so they always
     // appear in the palette. Workspace and CLI checks happen inside each handler.
     context.subscriptions.push(
@@ -63,11 +69,13 @@ export function activate(context: vscode.ExtensionContext): void {
             const cwd = getWorkspaceCwd();
             if (cwd === undefined || !requireCli()) { return; }
             await initVaultHandler(outputChannel, cwd, () => refreshStatusBar(statusBarItem, cwd));
+            await refreshTree();
         }),
-        vscode.commands.registerCommand('envy-vscode.setSecret', async () => {
+        vscode.commands.registerCommand('envy-vscode.setSecret', async (keyArg?: string) => {
             const cwd = getWorkspaceCwd();
             if (cwd === undefined || !requireCli()) { return; }
-            await setSecretHandler(outputChannel, cwd, () => refreshStatusBar(statusBarItem, cwd));
+            await setSecretHandler(outputChannel, cwd, () => refreshStatusBar(statusBarItem, cwd), keyArg);
+            await refreshTree();
         }),
         vscode.commands.registerCommand('envy-vscode.showDiff', async () => {
             const cwd = getWorkspaceCwd();
@@ -95,6 +103,17 @@ export function activate(context: vscode.ExtensionContext): void {
             if (cwd !== undefined) {
                 await refreshStatusBar(statusBarItem, cwd);
             }
+        }),
+        // Tree view commands (US2, US3, US4 — specs/002-tree-view).
+        vscode.commands.registerCommand('envy-vscode.copyKeyName', async (item: SecretKeyItem) => {
+            await vscode.env.clipboard.writeText(item.key);
+            void vscode.window.showInformationMessage(`Copied: ${item.key}`);
+        }),
+        vscode.commands.registerCommand('envy-vscode.editSecret', async (item: SecretKeyItem) => {
+            await vscode.commands.executeCommand('envy-vscode.setSecret', item.key);
+        }),
+        vscode.commands.registerCommand('envy-vscode.refreshTreeView', () => {
+            treeProvider.refresh();
         }),
     );
 

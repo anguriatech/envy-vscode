@@ -11,12 +11,13 @@ Auto-generated from all feature plans. Last updated: 2026-04-06
 
 ```text
 src/
-├── extension.ts            # activate() / deactivate() — command registration + status bar init
+├── extension.ts            # activate() / deactivate() — command registration + status bar + tree view wiring
 ├── cli.ts                  # ONLY file that imports child_process — execEnvy(args, cwd)
 ├── statusBar.ts            # createStatusBar() + refreshStatusBar() — sync status display
+├── treeView.ts             # EnvySecretsProvider (TreeDataProvider) + SecretKeyItem — "Envy Secrets" Explorer panel
 └── commands/
     ├── initVault.ts        # "Envy: Init Vault"
-    ├── setSecret.ts        # "Envy: Set Secret" — two-step InputBox (value obscured)
+    ├── setSecret.ts        # "Envy: Set Secret" — two-step InputBox (value obscured), optional prefillKey
     ├── showDiff.ts         # "Envy: Show Diff" — output to OutputChannel
     ├── encrypt.ts          # "Envy: Encrypt (Seal)" — integrated terminal (PTY passphrase)
     └── decrypt.ts          # "Envy: Decrypt" — integrated terminal (PTY passphrase)
@@ -25,6 +26,7 @@ src/test/
 └── extension.test.ts       # Mocha tests — run via npm test
 
 specs/001-vscode-extension-mvp/   # Design docs for this feature
+specs/002-tree-view/              # Design docs for this feature
 ```
 
 ## Commands
