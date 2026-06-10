@@ -52,7 +52,7 @@
 - [x] T008 [US1] Implement `async getChildren(): Promise<SecretKeyItem[]>` in `EnvySecretsProvider`: call `execEnvy(['list'], this._cwd)`, parse stdout by splitting on `\n`, trimming whitespace, filtering empty lines; return one `SecretKeyItem` per non-empty line; import `execEnvy` and `CliNotFoundError` from `../cli`
 - [x] T009 [US1] Add state management to `EnvySecretsProvider.getChildren()`: after parsing, call `vscode.commands.executeCommand('setContext', 'envySecrets.state', state)` where `state` is `'keys'` if items.length > 0, `'empty'` if items.length === 0 and exitCode === 0, `'notInitialized'` if exitCode !== 0 and stderr matches `/not found|no manifest|no vault/i`, `'cliUnavailable'` if error is `CliNotFoundError`, `'error'` for any other non-zero exit; export `EnvySecretsProvider` from `src/treeView.ts`
 - [x] T010 [US1] In `src/extension.ts`, import `EnvySecretsProvider` from `./treeView`; in `activate()`, after `createStatusBar`, instantiate `const provider = new EnvySecretsProvider(cwd ?? '')` and call `context.subscriptions.push(vscode.window.registerTreeDataProvider('envySecrets', provider))`; set initial context key `vscode.commands.executeCommand('setContext', 'envySecrets.state', 'loading')` before the first refresh
-- [ ] T011 [US1] Manual F5 test — Extension Development Host: (a) open workspace with ≥ 1 secret: verify "Envy Secrets" panel lists all key names, no values visible; (b) open workspace with no secrets: verify "No secrets found" welcome message appears; (c) open folder with no `envy.toml`: verify "Vault not initialized" message appears
+- [x] T011 [US1] Manual F5 test — Extension Development Host: (a) open workspace with ≥ 1 secret: verify "Envy Secrets" panel lists all key names, no values visible; (b) open workspace with no secrets: verify "No secrets found" welcome message appears; (c) open folder with no `envy.toml`: verify "Vault not initialized" message appears — **verified by reviewer via F5 on 2026-06-10**
 
 **Checkpoint**: US1 fully functional. "Envy Secrets" panel visible and listing keys independently.
 
@@ -64,8 +64,8 @@
 
 **Independent Test**: Open a vault with ≥ 1 key. Hover over a key row in the "Envy Secrets" panel. Verify the copy icon (📋) appears. Click it. Paste into a text editor. Verify only the key name (not the value) was pasted.
 
-- [ ] T012 [US2] In `src/extension.ts`, register `envy-vscode.copyKeyName` command: `vscode.commands.registerCommand('envy-vscode.copyKeyName', async (item: SecretKeyItem) => { await vscode.env.clipboard.writeText(item.key); void vscode.window.showInformationMessage(\`Copied: \${item.key}\`); })`; import `SecretKeyItem` from `./treeView`
-- [ ] T013 [US2] Manual F5 test — hover over a key row: verify copy icon appears; click it; paste into a new editor tab; verify only the key name is pasted (not the value); verify "Copied: KEY_NAME" notification appears briefly
+- [x] T012 [US2] In `src/extension.ts`, register `envy-vscode.copyKeyName` command: `vscode.commands.registerCommand('envy-vscode.copyKeyName', async (item: SecretKeyItem) => { await vscode.env.clipboard.writeText(item.key); void vscode.window.showInformationMessage(\`Copied: \${item.key}\`); })`; import `SecretKeyItem` from `./treeView`
+- [x] T013 [US2] Manual F5 test — hover over a key row: verify copy icon appears; click it; paste into a new editor tab; verify only the key name is pasted (not the value); verify "Copied: KEY_NAME" notification appears briefly — **verified by reviewer via F5 on 2026-06-10**
 
 **Checkpoint**: US2 functional. Copy icon visible on hover; clipboard receives only the key name.
 
@@ -77,10 +77,10 @@
 
 **Independent Test**: Open a vault with ≥ 1 key. Hover over a key row. Click the edit icon. Verify the Set Secret input box opens with the key name already filled in. Enter a new value. Verify the secret is updated.
 
-- [ ] T014 [US3] Modify `src/commands/setSecret.ts`: add optional fourth parameter `prefillKey?: string` to the `handler` function signature; update the first `vscode.window.showInputBox` call to include `value: prefillKey ?? ''` so the key field is pre-populated when provided
-- [ ] T015 [US3] In `src/extension.ts`, update the `envy-vscode.setSecret` command registration to forward a `keyArg` from command arguments: change handler to `async (keyArg?: string) => { ...; await setSecretHandler(outputChannel, cwd, refresh, keyArg); }` — this makes the command accept the optional key from `executeCommand` calls
-- [ ] T016 [US3] In `src/extension.ts`, register `envy-vscode.editSecret` command: `vscode.commands.registerCommand('envy-vscode.editSecret', async (item: SecretKeyItem) => { await vscode.commands.executeCommand('envy-vscode.setSecret', item.key); })`
-- [ ] T017 [US3] Manual F5 test — hover over a key row; click edit icon; verify Set Secret input box opens with key name pre-filled; enter a new value and confirm; verify success notification appears and key is still listed in the panel
+- [x] T014 [US3] Modify `src/commands/setSecret.ts`: add optional fourth parameter `prefillKey?: string` to the `handler` function signature; update the first `vscode.window.showInputBox` call to include `value: prefillKey ?? ''` so the key field is pre-populated when provided
+- [x] T015 [US3] In `src/extension.ts`, update the `envy-vscode.setSecret` command registration to forward a `keyArg` from command arguments: change handler to `async (keyArg?: string) => { ...; await setSecretHandler(outputChannel, cwd, refresh, keyArg); }` — this makes the command accept the optional key from `executeCommand` calls
+- [x] T016 [US3] In `src/extension.ts`, register `envy-vscode.editSecret` command: `vscode.commands.registerCommand('envy-vscode.editSecret', async (item: SecretKeyItem) => { await vscode.commands.executeCommand('envy-vscode.setSecret', item.key); })`
+- [x] T017 [US3] Manual F5 test — hover over a key row; click edit icon; verify Set Secret input box opens with key name pre-filled; enter a new value and confirm; verify success notification appears and key is still listed in the panel — **verified by reviewer via F5 on 2026-06-10**
 
 **Checkpoint**: US3 functional. Edit icon visible on hover; Set Secret opens pre-populated with the key name.
 
@@ -92,10 +92,10 @@
 
 **Independent Test**: Run "Envy: Set Secret" and add a new key. Verify the new key appears in the panel automatically without clicking refresh. Then click the panel header refresh button (🔄) and verify the list reloads.
 
-- [ ] T018 [US4] In `src/extension.ts`, create a `refreshTree` closure: `const refreshTree = async (): Promise<void> => { provider.refresh(); }` — this parallels the existing `refresh` closure for `refreshStatusBar`; call `void refreshTree()` at the end of the `initVault` handler (after the existing `refresh()` call for the status bar)
-- [ ] T019 [US4] In `src/extension.ts`, wire `refreshTree` into the `setSecret` command: call `void refreshTree()` at the end of the `setSecret` handler (after the existing `refresh()` call for the status bar, inside the success branch of the handler — note `setSecret` handler already calls `refresh()` internally; wire `refreshTree` to be called from `extension.ts` after the command resolves, mirroring the `initVault` pattern)
-- [ ] T020 [US4] In `src/extension.ts`, register `envy-vscode.refreshTreeView` command: `vscode.commands.registerCommand('envy-vscode.refreshTreeView', () => { provider.refresh(); })`; push to `context.subscriptions`
-- [ ] T021 [US4] Manual F5 test — (a) run "Envy: Set Secret" via Command Palette; add a new key; verify it appears in "Envy Secrets" panel without clicking refresh; (b) click the refresh button (🔄) in the panel header; verify the list reloads; (c) run "Envy: Init Vault" in a fresh workspace; verify the panel transitions from "not initialized" to the empty-vault message
+- [x] T018 [US4] In `src/extension.ts`, create a `refreshTree` closure: `const refreshTree = async (): Promise<void> => { provider.refresh(); }` — this parallels the existing `refresh` closure for `refreshStatusBar`; call `void refreshTree()` at the end of the `initVault` handler (after the existing `refresh()` call for the status bar)
+- [x] T019 [US4] In `src/extension.ts`, wire `refreshTree` into the `setSecret` command: call `void refreshTree()` at the end of the `setSecret` handler (after the existing `refresh()` call for the status bar, inside the success branch of the handler — note `setSecret` handler already calls `refresh()` internally; wire `refreshTree` to be called from `extension.ts` after the command resolves, mirroring the `initVault` pattern)
+- [x] T020 [US4] In `src/extension.ts`, register `envy-vscode.refreshTreeView` command: `vscode.commands.registerCommand('envy-vscode.refreshTreeView', () => { provider.refresh(); })`; push to `context.subscriptions`
+- [x] T021 [US4] Manual F5 test — (a) run "Envy: Set Secret" via Command Palette; add a new key; verify it appears in "Envy Secrets" panel without clicking refresh; (b) click the refresh button (🔄) in the panel header; verify the list reloads; (c) run "Envy: Init Vault" in a fresh workspace; verify the panel transitions from "not initialized" to the empty-vault message — **verified by reviewer via F5 on 2026-06-10**
 
 **Checkpoint**: US4 functional. Panel auto-refreshes after Set Secret and Init Vault; manual refresh works.
 
@@ -105,11 +105,11 @@
 
 **Purpose**: Automated test updates, compile/lint verification, and documentation.
 
-- [ ] T022 [P] Update `src/test/extension.test.ts`: add assertions that `envy-vscode.copyKeyName`, `envy-vscode.editSecret`, and `envy-vscode.refreshTreeView` are registered in `vscode.commands.getCommands(true)` — run `npm test` to confirm the new assertions pass
-- [ ] T023 [P] Run `npm run compile` and resolve any remaining TypeScript strict-mode errors across `src/treeView.ts`, `src/commands/setSecret.ts`, and `src/extension.ts`; confirm zero webpack errors
-- [ ] T024 [P] Run `npm run lint` and fix all ESLint issues in `src/treeView.ts`, `src/commands/setSecret.ts`, and `src/extension.ts`
-- [ ] T025 Run `npm test` to confirm all Mocha tests pass (includes the new command registration assertions from T022)
-- [ ] T026 [P] Update `CLAUDE.md` project structure section: add `treeView.ts` to the `src/` layout and add `TreeDataProvider`, `EventEmitter`, `env.clipboard` to the active technologies section
+- [x] T022 [P] Update `src/test/extension.test.ts`: add assertions that `envy-vscode.copyKeyName`, `envy-vscode.editSecret`, and `envy-vscode.refreshTreeView` are registered in `vscode.commands.getCommands(true)` — run `npm test` to confirm the new assertions pass
+- [x] T023 [P] Run `npm run compile` and resolve any remaining TypeScript strict-mode errors across `src/treeView.ts`, `src/commands/setSecret.ts`, and `src/extension.ts`; confirm zero webpack errors
+- [x] T024 [P] Run `npm run lint` and fix all ESLint issues in `src/treeView.ts`, `src/commands/setSecret.ts`, and `src/extension.ts`
+- [x] T025 Run `npm test` to confirm all Mocha tests pass (includes the new command registration assertions from T022)
+- [x] T026 [P] Update `CLAUDE.md` project structure section: add `treeView.ts` to the `src/` layout and add `TreeDataProvider`, `EventEmitter`, `env.clipboard` to the active technologies section (renamed to `AGENTS.md` during tooling migration; same content)
 
 ---
 
