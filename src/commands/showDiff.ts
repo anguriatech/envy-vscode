@@ -1,22 +1,53 @@
 import * as vscode from 'vscode';
-
-// Module-level terminal reference — reused between invocations to avoid
-// stacking up multiple Envy terminals. Replaced when the terminal is closed.
-let envyTerminal: vscode.Terminal | undefined;
+import { execEnvy } from '../cli';
 
 /**
- * Open the Envy integrated terminal and run `envy diff`.
- * The terminal provides a real PTY so the passphrase prompt works natively.
- * `envy diff` must decrypt the vault to compute the diff, so a passphrase
- * is required — this cannot run via execFile (no TTY).
+ * "Envy: Show Diff" — headless invocation.
+ *
+ * Collects the passphrase through an obscured input box, passes it to the
+ * CLI via the `ENVY_PASSPHRASE` env var (never argv), and observes the exit
+ * code so a success or error toast can be shown. Writes the diff to the
+ * existing "Envy" Output Channel. The diff may contain secret values, but
+ * this is the user-requested, passphrase-gated read surface established in
+ * 001-vscode-extension-mvp. The passphrase itself is NEVER written to the
+ * Output Channel.
  */
 export async function handler(
-    _outputChannel: vscode.OutputChannel,
-    _cwd: string
+    outputChannel: vscode.OutputChannel,
+    cwd: string,
 ): Promise<void> {
-    if (envyTerminal === undefined || envyTerminal.exitStatus !== undefined) {
-        envyTerminal = vscode.window.createTerminal({ name: 'Envy' });
+    const pw = await vscode.window.showInputBox({
+        prompt: 'Envy passphrase',
+        password: true,
+        ignoreFocusOut: true,
+        validateInput: (v) => (v.length === 0 ? 'Passphrase cannot be empty' : undefined),
+    });
+    if (pw === undefined) {
+        return;
     }
-    envyTerminal.sendText('envy diff', true);
-    envyTerminal.show();
+    if (pw.length === 0) {
+        return;
+    }
+
+    const result = await execEnvy(['diff'], cwd, {
+        env: { ...process.env, ENVY_PASSPHRASE: pw },
+    });
+
+    if (result.stdout.length > 0) {
+        outputChannel.appendLine(result.stdout);
+    }
+    if (result.stderr.length > 0) {
+        outputChannel.appendLine(result.stderr);
+    }
+
+    if (result.exitCode === 0) {
+        void vscode.window.showInformationMessage('Diff complete.');
+        outputChannel.show();
+        return;
+    }
+
+    void vscode.window.showErrorMessage(
+        result.stderr.trim() || 'Diff failed.',
+    );
+    outputChannel.show();
 }

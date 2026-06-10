@@ -49,10 +49,13 @@ export class EnvySecretsProvider implements vscode.TreeDataProvider<SecretKeyIte
             const result = await execEnvy(['list'], this._cwd);
 
             if (result.exitCode !== 0) {
-                // "environment '...' not found" means the vault exists but has no
-                // secrets yet — the environment record is only created on first `envy set`.
-                // This must be checked BEFORE the generic "not found" pattern below.
-                const isEmptyEnvironment = /environment.+not found/i.test(result.stderr);
+                // The CLI v0.2.7 emits "(no secrets in <env>)" for an empty vault
+                // (exit 0) and "error: database error: record not found" for a
+                // missing environment (exit 1). Both stderr patterns are routed
+                // to the `empty` state. The `not initialized` state is gated
+                // separately on the `manifest|envy\.toml|not initialized` pattern
+                // below.
+                const isEmptyEnvironment = /no secrets in|record not found/i.test(result.stderr);
                 if (isEmptyEnvironment) {
                     this._setState('empty');
                     return [];

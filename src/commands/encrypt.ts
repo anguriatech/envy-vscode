@@ -1,19 +1,46 @@
 import * as vscode from 'vscode';
-
-// Module-level terminal reference — reused between invocations to avoid
-// stacking up multiple Envy terminals. Replaced when the terminal is closed.
-let envyTerminal: vscode.Terminal | undefined;
+import { execEnvy } from '../cli';
 
 /**
- * Open the Envy integrated terminal and run `envy encrypt`.
- * The terminal provides a real PTY so the passphrase prompt works natively.
- * Status bar is refreshed after a 3-second delay (no completion event from terminal).
+ * "Envy: Encrypt (Seal)" — headless invocation.
+ *
+ * Collects the passphrase through an obscured input box, passes it to the
+ * CLI via the `ENVY_PASSPHRASE` env var (never argv), and observes the exit
+ * code so a success or error toast can be shown. Refreshes the status bar
+ * and tree view on success. The passphrase and any value-bearing stderr are
+ * never written to the Output Channel.
  */
 export async function handler(refresh: () => Promise<void>): Promise<void> {
-    if (envyTerminal === undefined || envyTerminal.exitStatus !== undefined) {
-        envyTerminal = vscode.window.createTerminal({ name: 'Envy' });
+    const pw = await vscode.window.showInputBox({
+        prompt: 'Envy passphrase',
+        password: true,
+        ignoreFocusOut: true,
+        validateInput: (v) => (v.length === 0 ? 'Passphrase cannot be empty' : undefined),
+    });
+    if (pw === undefined) {
+        return;
     }
-    envyTerminal.sendText('envy encrypt', true);
-    envyTerminal.show();
-    setTimeout(() => { void refresh(); }, 3000);
+    if (pw.length === 0) {
+        return;
+    }
+
+    const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if (cwd === undefined) {
+        void vscode.window.showErrorMessage('Envy: No workspace folder is open.');
+        return;
+    }
+
+    const result = await execEnvy(['encrypt'], cwd, {
+        env: { ...process.env, ENVY_PASSPHRASE: pw },
+    });
+
+    if (result.exitCode === 0) {
+        void vscode.window.showInformationMessage('Vault sealed.');
+        await refresh();
+        return;
+    }
+
+    void vscode.window.showErrorMessage(
+        result.stderr.trim() || 'Encryption failed.',
+    );
 }
